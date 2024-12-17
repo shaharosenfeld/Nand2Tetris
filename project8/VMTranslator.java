@@ -21,10 +21,16 @@ public class VMTranslator {
 
     private void initialize() throws IOException {
         codeWriter = CodeWriter.getInstance(outputPath.toString());
-        if (inputFiles.size() > 1) {
+        
+        // Always write initialization for multi-file programs or when Sys.vm exists
+        boolean hasSysInit = inputFiles.stream()
+            .anyMatch(p -> p.getFileName().toString().equals("Sys.vm"));
+        
+        if (inputFiles.size() > 1 || hasSysInit) {
             codeWriter.writeInit();
         }
     }
+    
 
     private void translate() throws IOException {
         for (Path inputFile : inputFiles) {
