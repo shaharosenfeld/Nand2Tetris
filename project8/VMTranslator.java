@@ -21,11 +21,14 @@ public class VMTranslator {
 
     private void initialize() throws IOException {
         codeWriter = CodeWriter.getInstance(outputPath.toString());
+        if (inputFiles.size() > 1) {
+            codeWriter.writeInit();
+        }
     }
 
     private void translate() throws IOException {
         for (Path inputFile : inputFiles) {
-            
+
             System.out.println("Processing: " + inputFile.getFileName());
             // Create new parser for each file
             try {
@@ -38,7 +41,6 @@ public class VMTranslator {
                     }
 
                     Parser.CommandType commandType = parser.commandType();
-                    
 
                     if (commandType == parser.commandType().C_ARITHMETIC) {
                         codeWriter.writeArithmetic(parser.arg1());
@@ -66,14 +68,15 @@ public class VMTranslator {
         System.out.println("\nTranslation complete.");
     }
 
-    private void processCommand(Parser parser) throws IOException {
+    /**private void processCommand(Parser parser) throws IOException {
         Parser.CommandType commandType = parser.commandType();
         if (commandType == Parser.CommandType.C_ARITHMETIC) {
             codeWriter.writeArithmetic(parser.arg1());
         } else if (commandType == Parser.CommandType.C_POP || commandType == Parser.CommandType.C_PUSH) {
             codeWriter.writePushPop(commandType, parser.arg1(), parser.arg2());
         }
-    }
+
+    }**/
 
     private void close() {
         if (codeWriter != null) {

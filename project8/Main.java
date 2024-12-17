@@ -38,7 +38,7 @@ public class Main {
         // Create output file with same name as directory
         String outputFileName = dirPath.getFileName().toString() + ".asm";
         Path outputPath = dirPath.resolve(outputFileName);
-        
+
         VMTranslator translator = new VMTranslator(vmFiles, outputPath);
         translator.run();
     }
@@ -47,7 +47,7 @@ public class Main {
         if (!filePath.toString().endsWith(".vm")) {
             throw new IllegalArgumentException("Input file must have a .vm extension");
         }
-        
+
         VMTranslator translator = new VMTranslator(filePath);
         translator.run();
     }

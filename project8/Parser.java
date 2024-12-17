@@ -76,11 +76,11 @@ public class Parser {
                     int commentIndex = currentLine.indexOf("//");
                     if (commentIndex != -1) {
                         //updates pardser's current instruction to this instruction
-                        cur_command = currentLine.substring(0, commentIndex);
+                        cur_command = currentLine.substring(0, commentIndex).trim();
                         break;
                     } else {
                         // no comments -updates pardser's current instruction to this instruction
-                    cur_command = currentLine;
+                    cur_command = currentLine.trim();
                     break;                
                     }
                 }

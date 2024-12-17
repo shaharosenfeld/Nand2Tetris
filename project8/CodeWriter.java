@@ -9,6 +9,8 @@ public class CodeWriter {
     private int labelCounter = 0;
     private String currentFunction = "";
     private int returnCounter = 0;
+    private boolean isInit = false;
+
 
 
     // Private constructor to prevent external instantiation
@@ -16,10 +18,9 @@ public class CodeWriter {
         try {
             this.outputFileName = outputFileName;
             this.outPutWriter = new BufferedWriter(new FileWriter(outputFileName));
-            writeInit();
         } catch (IOException e) {
-            System.err.println("error initializing the output writer: " + e.getMessage());
-        } 
+            System.err.println("Error initializing the output writer: " + e.getMessage());
+        }
     }
 
 
@@ -28,26 +29,24 @@ public class CodeWriter {
     public static CodeWriter getInstance(String outputFileName) {
         if (instance == null) {
             instance = new CodeWriter(outputFileName);
-        } else {
-            throw new IllegalStateException("CodeWriter instance already initialized with an output file.");
         }
         return instance;
     }
 
-     // Writes the assembly code that effects the bootstrap code
-     public void writeInit() throws IOException {
-        // Initialize SP to 256
-        outPutWriter.write("@256");
-        outPutWriter.newLine();
-        outPutWriter.write("D=A");
-        outPutWriter.newLine();
-        outPutWriter.write("@SP");
-        outPutWriter.newLine();
-        outPutWriter.write("M=D");
-        outPutWriter.newLine();
-        
-        // Call Sys.init
-        writeCall("Sys.init", 0);
+     
+    public void writeInit() throws IOException {
+        if (!isInit) {
+            // Bootstrap code
+            write("// Bootstrap code");
+            write("@256");
+            write("D=A");
+            write("@SP");
+            write("M=D");
+            
+            // Call Sys.init
+            writeCall("Sys.init", 0);
+            isInit = true;
+        }
     }
 
     public void writeLabel(String command) {
@@ -158,12 +157,15 @@ public class CodeWriter {
     }
 
 
-    public void writeFunction(String functionName, int numLocals) throws IOException {
+    public void writeFunction(String functionName, int nVars) throws IOException {
+        currentFunction = functionName;
+        outPutWriter.write("// function " + functionName + " " + nVars);
+        outPutWriter.newLine();
         outPutWriter.write("(" + functionName + ")");
         outPutWriter.newLine();
 
         // Initialize local variables to 0
-        for (int i = 0; i < numLocals; i++) {
+        for (int i = 0; i < nVars; i++) {
             outPutWriter.write("@SP");
             outPutWriter.newLine();
             outPutWriter.write("A=M");
@@ -197,15 +199,15 @@ public class CodeWriter {
 
 
     public void writeReturn() throws IOException {
-        String endFrame = "R13"; // temp variable for LCL
-        String retAddr = "R14";  // temp variable for return address
+        //String endFrame = "R13"; // temp variable for LCL
+        //String retAddr = "R14";  // temp variable for return address
 
         // endFrame = LCL
         outPutWriter.write("@LCL");
         outPutWriter.newLine();
         outPutWriter.write("D=M");
         outPutWriter.newLine();
-        outPutWriter.write("@" + endFrame);
+        outPutWriter.write("@R13");
         outPutWriter.newLine();
         outPutWriter.write("M=D");
         outPutWriter.newLine();
@@ -217,7 +219,7 @@ public class CodeWriter {
         outPutWriter.newLine();
         outPutWriter.write("D=M");
         outPutWriter.newLine();
-        outPutWriter.write("@" + retAddr);
+        outPutWriter.write("@R14");
         outPutWriter.newLine();
         outPutWriter.write("M=D");
         outPutWriter.newLine();
@@ -247,13 +249,13 @@ public class CodeWriter {
         outPutWriter.newLine();
 
         // Restore caller's state
-        restoreCallerSegment("THAT", endFrame, 1);
-        restoreCallerSegment("THIS", endFrame, 2);
-        restoreCallerSegment("ARG", endFrame, 3);
-        restoreCallerSegment("LCL", endFrame, 4);
+        restoreCallerSegment("THAT", "@R13", 1);
+        restoreCallerSegment("THIS", "@R13", 2);
+        restoreCallerSegment("ARG", "@R13", 3);
+        restoreCallerSegment("LCL", "@R13", 4);
 
         // goto retAddr
-        outPutWriter.write("@" + retAddr);
+        outPutWriter.write("@R14");
         outPutWriter.newLine();
         outPutWriter.write("A=M");
         outPutWriter.newLine();
@@ -263,7 +265,7 @@ public class CodeWriter {
 
 
     private void restoreCallerSegment(String location, String endFrame, int offset) throws IOException {
-        outPutWriter.write("@" + endFrame);
+        outPutWriter.write("@R13");
         outPutWriter.newLine();
         outPutWriter.write("D=M");
         outPutWriter.newLine();
