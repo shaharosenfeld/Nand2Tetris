@@ -25,6 +25,7 @@ public class VMTranslator {
 
     private void translate() throws IOException {
         for (Path inputFile : inputFiles) {
+            
             System.out.println("Processing: " + inputFile.getFileName());
             // Create new parser for each file
             try {
@@ -32,14 +33,31 @@ public class VMTranslator {
                 // Process all commands in this file
                 while (parser.hasMoreCommands()) {
                     parser.advance();
+                    if (parser.cur_command == null || parser.cur_command.trim().isEmpty()) {
+                        continue;
+                    }
+
                     Parser.CommandType commandType = parser.commandType();
                     
-                    // Process each command based on its type
-                    if (commandType == Parser.CommandType.C_ARITHMETIC) {
+
+                    if (commandType == parser.commandType().C_ARITHMETIC) {
                         codeWriter.writeArithmetic(parser.arg1());
-                    } else if (commandType == Parser.CommandType.C_POP || commandType == Parser.CommandType.C_PUSH) {
+                    } else if (commandType == Parser.CommandType.C_PUSH || commandType == Parser.CommandType.C_POP) {
                         codeWriter.writePushPop(commandType, parser.arg1(), parser.arg2());
+                    } else if (commandType == Parser.CommandType.C_LABEL) {
+                        codeWriter.writeLabel(parser.arg1());
+                    } else if (commandType == Parser.CommandType.C_GOTO) {
+                        codeWriter.writeGoto(parser.arg1());
+                    } else if (commandType == Parser.CommandType.C_IF) {
+                        codeWriter.writeIf(parser.arg1());
+                    } else if (commandType == Parser.CommandType.C_FUNCTION) {
+                        codeWriter.writeFunction(parser.arg1(), parser.arg2());
+                    } else if (commandType == Parser.CommandType.C_RETURN) {
+                        codeWriter.writeReturn();
+                    } else if (commandType == Parser.CommandType.C_CALL) {
+                        codeWriter.writeCall(parser.arg1(), parser.arg2());
                     }
+
                 }
             } catch (IOException e) {
                 System.err.println("Error processing file " + inputFile.getFileName() + ": " + e.getMessage());

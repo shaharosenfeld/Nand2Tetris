@@ -7,6 +7,8 @@ public class CodeWriter {
     private BufferedWriter outPutWriter;
     private String outputFileName;
     private int labelCounter = 0;
+    private String currentFunction = "";
+    private int returnCounter = 0;
 
 
     // Private constructor to prevent external instantiation
@@ -14,6 +16,7 @@ public class CodeWriter {
         try {
             this.outputFileName = outputFileName;
             this.outPutWriter = new BufferedWriter(new FileWriter(outputFileName));
+            writeInit();
         } catch (IOException e) {
             System.err.println("error initializing the output writer: " + e.getMessage());
         } 
@@ -30,6 +33,252 @@ public class CodeWriter {
         }
         return instance;
     }
+
+     // Writes the assembly code that effects the bootstrap code
+     public void writeInit() throws IOException {
+        // Initialize SP to 256
+        outPutWriter.write("@256");
+        outPutWriter.newLine();
+        outPutWriter.write("D=A");
+        outPutWriter.newLine();
+        outPutWriter.write("@SP");
+        outPutWriter.newLine();
+        outPutWriter.write("M=D");
+        outPutWriter.newLine();
+        
+        // Call Sys.init
+        writeCall("Sys.init", 0);
+    }
+
+    public void writeLabel(String command) {
+        try {
+            outPutWriter.write("(" + command + ")");
+            outPutWriter.newLine();
+        } catch (IOException e) {
+            System.err.println("Error writing label command: " + e.getMessage());
+        }
+    }
+
+    public void writeGoto(String command) {
+        try {
+            outPutWriter.write("@" + command);
+            outPutWriter.newLine();
+            outPutWriter.write("0;JMP");
+            outPutWriter.newLine();
+        } catch (IOException e) {
+            System.err.println("Error writing label command: " + e.getMessage());
+        }
+    }
+
+    public void writeIf(String command) {
+        try {
+            outPutWriter.write("@SP");
+            outPutWriter.newLine();
+            outPutWriter.write("M=M-1");
+            outPutWriter.newLine();
+            outPutWriter.write("A=M");
+            outPutWriter.newLine();
+            outPutWriter.write("D=M");
+            outPutWriter.newLine();
+            outPutWriter.write("@" + command);
+            outPutWriter.newLine();
+            outPutWriter.write("D;JNE");
+            outPutWriter.newLine();
+
+            
+        } catch (IOException e) {
+            System.err.println("Error writing label command: " + e.getMessage());
+        }
+    }
+
+    public void writeCall(String functionName, int nArgs) {
+        try {
+            String returnLabel = functionName + "$ret." + returnCounter++;
+            outPutWriter.write("@" + returnLabel);
+            outPutWriter.newLine();
+            outPutWriter.write("D=A");
+            outPutWriter.newLine();
+            outPutWriter.write("@SP");
+            outPutWriter.newLine();
+            outPutWriter.write("A=M");
+            outPutWriter.newLine();
+            outPutWriter.write("M=D");
+            outPutWriter.newLine();
+            outPutWriter.write("@SP");
+            outPutWriter.newLine();
+            outPutWriter.write("M=M+1");
+            outPutWriter.newLine();
+
+            pushSegmentPointer("LCL");
+            pushSegmentPointer("ARG");
+            pushSegmentPointer("THIS");
+            pushSegmentPointer("THAT");
+
+            //  ARG: ARG = SP-5-nArgs
+            outPutWriter.write("@SP");
+            outPutWriter.newLine();
+            outPutWriter.write("D=M");
+            outPutWriter.newLine();
+            outPutWriter.write("@5");
+            outPutWriter.newLine();
+            outPutWriter.write("D=D-A");
+            outPutWriter.newLine();
+            outPutWriter.write("@" + nArgs);
+            outPutWriter.newLine();
+            outPutWriter.write("D=D-A");
+            outPutWriter.newLine();
+            outPutWriter.write("@ARG");
+            outPutWriter.newLine();
+            outPutWriter.write("M=D");
+            outPutWriter.newLine();
+
+            // Reposition LCL: LCL = SP
+            outPutWriter.write("@SP");
+            outPutWriter.newLine();
+            outPutWriter.write("D=M");
+            outPutWriter.newLine();
+            outPutWriter.write("@LCL");
+            outPutWriter.newLine();
+            outPutWriter.write("M=D");
+            outPutWriter.newLine();
+
+            // Transfer control
+            outPutWriter.write("@" + functionName);
+            outPutWriter.newLine();
+            outPutWriter.write("0;JMP");
+            outPutWriter.newLine();
+
+            // Insert return address label
+            outPutWriter.write("(" + returnLabel + ")");
+            outPutWriter.newLine();
+                
+        } catch (IOException e) {
+            System.err.println("Error writing label command: " + e.getMessage());
+        }
+    }
+
+
+    public void writeFunction(String functionName, int numLocals) throws IOException {
+        outPutWriter.write("(" + functionName + ")");
+        outPutWriter.newLine();
+
+        // Initialize local variables to 0
+        for (int i = 0; i < numLocals; i++) {
+            outPutWriter.write("@SP");
+            outPutWriter.newLine();
+            outPutWriter.write("A=M");
+            outPutWriter.newLine();
+            outPutWriter.write("M=0");
+            outPutWriter.newLine();
+            outPutWriter.write("@SP");
+            outPutWriter.newLine();
+            outPutWriter.write("M=M+1");
+            outPutWriter.newLine();
+        }
+    }
+
+    private void pushSegmentPointer(String segment) throws IOException {
+        outPutWriter.write("@" + segment);
+        outPutWriter.newLine();
+        outPutWriter.write("D=M");
+        outPutWriter.newLine();
+        outPutWriter.write("@SP");
+        outPutWriter.newLine();
+        outPutWriter.write("A=M");
+        outPutWriter.newLine();
+        outPutWriter.write("M=D");
+        outPutWriter.newLine();
+        outPutWriter.write("@SP");
+        outPutWriter.newLine();
+        outPutWriter.write("M=M+1");
+        outPutWriter.newLine();
+    }
+
+
+
+    public void writeReturn() throws IOException {
+        String endFrame = "R13"; // temp variable for LCL
+        String retAddr = "R14";  // temp variable for return address
+
+        // endFrame = LCL
+        outPutWriter.write("@LCL");
+        outPutWriter.newLine();
+        outPutWriter.write("D=M");
+        outPutWriter.newLine();
+        outPutWriter.write("@" + endFrame);
+        outPutWriter.newLine();
+        outPutWriter.write("M=D");
+        outPutWriter.newLine();
+
+        // retAddr = *(endFrame - 5)
+        outPutWriter.write("@5");
+        outPutWriter.newLine();
+        outPutWriter.write("A=D-A");
+        outPutWriter.newLine();
+        outPutWriter.write("D=M");
+        outPutWriter.newLine();
+        outPutWriter.write("@" + retAddr);
+        outPutWriter.newLine();
+        outPutWriter.write("M=D");
+        outPutWriter.newLine();
+
+        // *ARG = pop()
+        outPutWriter.write("@SP");
+        outPutWriter.newLine();
+        outPutWriter.write("AM=M-1");
+        outPutWriter.newLine();
+        outPutWriter.write("D=M");
+        outPutWriter.newLine();
+        outPutWriter.write("@ARG");
+        outPutWriter.newLine();
+        outPutWriter.write("A=M");
+        outPutWriter.newLine();
+        outPutWriter.write("M=D");
+        outPutWriter.newLine();
+
+        // SP = ARG + 1
+        outPutWriter.write("@ARG");
+        outPutWriter.newLine();
+        outPutWriter.write("D=M+1");
+        outPutWriter.newLine();
+        outPutWriter.write("@SP");
+        outPutWriter.newLine();
+        outPutWriter.write("M=D");
+        outPutWriter.newLine();
+
+        // Restore caller's state
+        restoreCallerSegment("THAT", endFrame, 1);
+        restoreCallerSegment("THIS", endFrame, 2);
+        restoreCallerSegment("ARG", endFrame, 3);
+        restoreCallerSegment("LCL", endFrame, 4);
+
+        // goto retAddr
+        outPutWriter.write("@" + retAddr);
+        outPutWriter.newLine();
+        outPutWriter.write("A=M");
+        outPutWriter.newLine();
+        outPutWriter.write("0;JMP");
+        outPutWriter.newLine();
+    }
+
+
+    private void restoreCallerSegment(String location, String endFrame, int offset) throws IOException {
+        outPutWriter.write("@" + endFrame);
+        outPutWriter.newLine();
+        outPutWriter.write("D=M");
+        outPutWriter.newLine();
+        outPutWriter.write("@" + offset);
+        outPutWriter.newLine();
+        outPutWriter.write("A=D-A");
+        outPutWriter.newLine();
+        outPutWriter.write("D=M");
+        outPutWriter.newLine();
+        outPutWriter.write("@" + location);
+        outPutWriter.newLine();
+        outPutWriter.write("M=D");
+        outPutWriter.newLine();
+    }
+
 
     public void writeArithmetic(String command) {
         try {

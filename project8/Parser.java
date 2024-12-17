@@ -92,9 +92,15 @@ public class Parser {
 
     //enum for command types
     public enum CommandType {
-        C_ARITHMETIC, //  0
-        C_PUSH,       //  1
-        C_POP         //  2
+        C_ARITHMETIC, 
+        C_PUSH,       
+        C_POP,         
+        C_LABEL,
+        C_GOTO,
+        C_IF,
+        C_FUNCTION,
+        C_RETURN,
+        C_CALL
     }
     
     //determines command type - returns a constant
@@ -103,6 +109,18 @@ public class Parser {
             return CommandType.C_PUSH; 
         } else if (cur_command.startsWith("pop")) {
             return CommandType.C_POP;
+        } else if (cur_command.startsWith("label")) {
+            return CommandType.C_LABEL;
+        } else if (cur_command.startsWith("goto")) {
+            return CommandType.C_GOTO;
+        } else if (cur_command.startsWith("if-goto")) {
+            return CommandType.C_IF;
+        } else if (cur_command.startsWith("function")) {
+            return CommandType.C_FUNCTION;
+        }else if (cur_command.startsWith("call")) {
+            return CommandType.C_CALL;
+        }else if (cur_command.startsWith("return")) {
+            return CommandType.C_RETURN;
         } else {
             return CommandType.C_ARITHMETIC;
         }
@@ -110,16 +128,25 @@ public class Parser {
 
     //returns the first argument of the current command
     public String arg1() {
-        if ((commandType() == CommandType.C_PUSH) || (commandType() == CommandType.C_POP)) {
-            return cur_command.split(" ")[1];
+        if (cur_command == null) {
+            throw new IllegalStateException("No current command");
+        }
+        if (commandType() == CommandType.C_RETURN) {
+            throw new IllegalStateException("return command has no arguments");
+        }
+        if ((commandType() == CommandType.C_ARITHMETIC)) {
+            return cur_command.split(" ")[0];
         } else { //its an arithmetic operation
-            return cur_command;
+            return cur_command.split(" ")[1];
         }
     }
 
     //returns the second argument of the current command
     public int arg2() {
-        if (commandType() == CommandType.C_PUSH || commandType() == CommandType.C_POP) {
+        if (cur_command == null) {
+            throw new IllegalStateException("No current command");
+        }
+        if (commandType() == CommandType.C_PUSH || commandType() == CommandType.C_POP || commandType() == CommandType.C_FUNCTION || commandType() == CommandType.C_CALL){
             return Integer.parseInt(cur_command.split(" ")[2]);
         } else {
             throw new IllegalStateException("arg2 can only be called for push or pop commands.");
