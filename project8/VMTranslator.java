@@ -34,10 +34,10 @@ public class VMTranslator {
 
     private void translate() throws IOException {
         for (Path inputFile : inputFiles) {
-
             System.out.println("Processing: " + inputFile.getFileName());
             // Create new parser for each file
             try {
+                codeWriter.setFileName(inputFile.toString()); // Add this line
                 Parser parser = Parser.getInstance(inputFile.toString());
                 // Process all commands in this file
                 while (parser.hasMoreCommands()) {

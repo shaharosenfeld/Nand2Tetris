@@ -11,6 +11,7 @@ public class CodeWriter {
     private String currentFunction = "";
     private int returnCounter = 0;
     private boolean isInit = false;
+    private String currentVMFile; 
 
 
 
@@ -24,7 +25,9 @@ public class CodeWriter {
         }
     }
 
-
+    public void setFileName(String fileName) {
+        this.currentVMFile = getFileName(fileName); // Get just the base name without extension
+    }
 
     // Static method to get the single instance of the class
     public static CodeWriter getInstance(String outputFileName) {
@@ -167,6 +170,22 @@ public class CodeWriter {
         outPutWriter.write("(" + returnLabel + ")\n");
     }
 
+
+    private String getFileName(String vmFile) {
+        File file = new File(vmFile);
+        String fileName = file.getName();
+        // Remove .asm extension if it exists
+        if (fileName.endsWith(".asm")) {
+            fileName = fileName.substring(0, fileName.lastIndexOf('.'));
+        }
+        // Remove .vm extension if it exists
+        if (fileName.endsWith(".vm")) {
+            fileName = fileName.substring(0, fileName.lastIndexOf('.'));
+        }
+        return fileName;
+    }
+    
+    
 
 
     public void writeFunction(String functionName, int nVars) throws IOException {
@@ -536,11 +555,7 @@ public void writeReturn() throws IOException {
                     outPutWriter.newLine();
                 }
                 else if (segment.equals("static")) {
-                    // Get just the filename without path and extension
-                    String fileName = new File(this.outputFileName).getName();
-                    fileName = fileName.substring(0, fileName.lastIndexOf('.'));
-                    
-                    outPutWriter.write("@" + fileName + "." + index);
+                    outPutWriter.write("@" + currentVMFile + "." + index);
                     outPutWriter.newLine();
                     outPutWriter.write("D=M");
                     outPutWriter.newLine();
@@ -597,7 +612,7 @@ public void writeReturn() throws IOException {
                     outPutWriter.newLine();
                     outPutWriter.write("D=M");
                     outPutWriter.newLine();
-                    outPutWriter.write("@" + fileName + "." + index);
+                    outPutWriter.write("@" + currentVMFile + "." + index);
                     outPutWriter.newLine();
                     outPutWriter.write("M=D");
                     outPutWriter.newLine();
