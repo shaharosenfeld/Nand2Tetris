@@ -22,7 +22,7 @@ public class VMTranslator {
     private void initialize() throws IOException {
         codeWriter = CodeWriter.getInstance(outputPath.toString());
         
-        // Always write initialization for multi-file programs or when Sys.vm exists
+        // Always write initialization for directory or when Sys.vm exists
         boolean hasSysInit = inputFiles.stream()
             .anyMatch(p -> p.getFileName().toString().equals("Sys.vm"));
         
@@ -74,15 +74,6 @@ public class VMTranslator {
         System.out.println("\nTranslation complete.");
     }
 
-    /**private void processCommand(Parser parser) throws IOException {
-        Parser.CommandType commandType = parser.commandType();
-        if (commandType == Parser.CommandType.C_ARITHMETIC) {
-            codeWriter.writeArithmetic(parser.arg1());
-        } else if (commandType == Parser.CommandType.C_POP || commandType == Parser.CommandType.C_PUSH) {
-            codeWriter.writePushPop(commandType, parser.arg1(), parser.arg2());
-        }
-
-    }**/
 
     private void close() {
         if (codeWriter != null) {

@@ -1,3 +1,4 @@
+
 import java.io.*;
 
 
@@ -136,7 +137,7 @@ public class Parser {
         }
         if ((commandType() == CommandType.C_ARITHMETIC)) {
             return cur_command.split(" ")[0];
-        } else { //its an arithmetic operation
+        } else { // the other commands have arg1
             return cur_command.split(" ")[1];
         }
     }
@@ -149,7 +150,7 @@ public class Parser {
         if (commandType() == CommandType.C_PUSH || commandType() == CommandType.C_POP || commandType() == CommandType.C_FUNCTION || commandType() == CommandType.C_CALL){
             return Integer.parseInt(cur_command.split(" ")[2]);
         } else {
-            throw new IllegalStateException("arg2 can only be called for push or pop commands.");
+            throw new IllegalStateException("arg2 can only be called for push, pop, call and function commands.");
         }
     }
 

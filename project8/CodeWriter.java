@@ -8,7 +8,6 @@ public class CodeWriter {
     private BufferedWriter outPutWriter;
     private String outputFileName;
     private int labelCounter = 0;
-    private String currentFunction = "";
     private int returnCounter = 0;
     private boolean isInit = false;
     private String currentVMFile; 
@@ -24,9 +23,23 @@ public class CodeWriter {
             System.err.println("Error initializing the output writer: " + e.getMessage());
         }
     }
-
+        // Get the filename from the given file
+        private String getFileName(String vmFile) {
+        File file = new File(vmFile);
+        String fileName = file.getName();
+        // Remove .asm extension if it exists
+        if (fileName.endsWith(".asm")) {
+            fileName = fileName.substring(0, fileName.lastIndexOf('.'));
+        }
+        // Remove .vm extension if it exists
+        if (fileName.endsWith(".vm")) {
+            fileName = fileName.substring(0, fileName.lastIndexOf('.'));
+        }
+        return fileName;
+    }
+    //Updates the currentVMFile field to contain the file currently processed
     public void setFileName(String fileName) {
-        this.currentVMFile = getFileName(fileName); // Get just the base name without extension
+        this.currentVMFile = getFileName(fileName); // gets just the base name without extension
     }
 
     // Static method to get the single instance of the class
@@ -37,25 +50,31 @@ public class CodeWriter {
         return instance;
     }
 
-     
+    
     public void writeInit() throws IOException {
         if (!isInit) {
             // Write bootstrap code header
-            outPutWriter.write("// Bootstrap code\n");
-            
+            outPutWriter.write("// Bootstrap code");
+            outPutWriter.newLine();
+    
             // Initialize SP to 256
-            outPutWriter.write("@256\n");
-            outPutWriter.write("D=A\n");
-            outPutWriter.write("@SP\n");
-            outPutWriter.write("M=D\n");
-            
+            outPutWriter.write("@256");
+            outPutWriter.newLine();
+            outPutWriter.write("D=A");
+            outPutWriter.newLine();
+            outPutWriter.write("@SP");
+            outPutWriter.newLine();
+            outPutWriter.write("M=D");
+            outPutWriter.newLine();
+    
             // Call Sys.init
             writeCall("Sys.init", 0);
-            
+    
             isInit = true;
         }
     }
-
+    
+    // Write a label command
     public void writeLabel(String command) {
         try {
             outPutWriter.write("(" + command + ")");
@@ -64,7 +83,7 @@ public class CodeWriter {
             System.err.println("Error writing label command: " + e.getMessage());
         }
     }
-
+    // Write a go-to command
     public void writeGoto(String command) {
         try {
             outPutWriter.write("@" + command);
@@ -75,7 +94,7 @@ public class CodeWriter {
             System.err.println("Error writing label command: " + e.getMessage());
         }
     }
-
+    // Write a if command
     public void writeIf(String command) {
         try {
             outPutWriter.write("@SP");
@@ -101,95 +120,128 @@ public class CodeWriter {
         String returnLabel = functionName + "$ret." + returnCounter;
         returnCounter++;
 
-        // Push return address
-        outPutWriter.write("@" + returnLabel + "\n");
-        outPutWriter.write("D=A\n");
-        outPutWriter.write("@SP\n");
-        outPutWriter.write("A=M\n");
-        outPutWriter.write("M=D\n");
-        outPutWriter.write("@SP\n");
-        outPutWriter.write("M=M+1\n");
+        outPutWriter.write("@" + returnLabel);
+        outPutWriter.newLine();
+        outPutWriter.write("D=A");
+        outPutWriter.newLine();
+        outPutWriter.write("@SP");
+        outPutWriter.newLine();
+        outPutWriter.write("A=M");
+        outPutWriter.newLine();
+        outPutWriter.write("M=D");
+        outPutWriter.newLine();
+        outPutWriter.write("@SP");
+        outPutWriter.newLine();
+        outPutWriter.write("M=M+1");
+        outPutWriter.newLine();
 
         // Push LCL
-        outPutWriter.write("@LCL\n");
-        outPutWriter.write("D=M\n");
-        outPutWriter.write("@SP\n");
-        outPutWriter.write("A=M\n");
-        outPutWriter.write("M=D\n");
-        outPutWriter.write("@SP\n");
-        outPutWriter.write("M=M+1\n");
+        outPutWriter.write("@LCL");
+        outPutWriter.newLine();
+        outPutWriter.write("D=M");
+        outPutWriter.newLine();
+        outPutWriter.write("@SP");
+        outPutWriter.newLine();
+        outPutWriter.write("A=M");
+        outPutWriter.newLine();
+        outPutWriter.write("M=D");
+        outPutWriter.newLine();
+        outPutWriter.write("@SP");
+        outPutWriter.newLine();
+        outPutWriter.write("M=M+1");
+        outPutWriter.newLine();
 
         // Push ARG
-        outPutWriter.write("@ARG\n");
-        outPutWriter.write("D=M\n");
-        outPutWriter.write("@SP\n");
-        outPutWriter.write("A=M\n");
-        outPutWriter.write("M=D\n");
-        outPutWriter.write("@SP\n");
-        outPutWriter.write("M=M+1\n");
+        outPutWriter.write("@ARG");
+        outPutWriter.newLine();
+        outPutWriter.write("D=M");
+        outPutWriter.newLine();
+        outPutWriter.write("@SP");
+        outPutWriter.newLine();
+        outPutWriter.write("A=M");
+        outPutWriter.newLine();
+        outPutWriter.write("M=D");
+        outPutWriter.newLine();
+        outPutWriter.write("@SP");
+        outPutWriter.newLine();
+        outPutWriter.write("M=M+1");
+        outPutWriter.newLine();
 
         // Push THIS
-        outPutWriter.write("@THIS\n");
-        outPutWriter.write("D=M\n");
-        outPutWriter.write("@SP\n");
-        outPutWriter.write("A=M\n");
-        outPutWriter.write("M=D\n");
-        outPutWriter.write("@SP\n");
-        outPutWriter.write("M=M+1\n");
+        outPutWriter.write("@THIS");
+        outPutWriter.newLine();
+        outPutWriter.write("D=M");
+        outPutWriter.newLine();
+        outPutWriter.write("@SP");
+        outPutWriter.newLine();
+        outPutWriter.write("A=M");
+        outPutWriter.newLine();
+        outPutWriter.write("M=D");
+        outPutWriter.newLine();
+        outPutWriter.write("@SP");
+        outPutWriter.newLine();
+        outPutWriter.write("M=M+1");
+        outPutWriter.newLine();
 
         // Push THAT
-        outPutWriter.write("@THAT\n");
-        outPutWriter.write("D=M\n");
-        outPutWriter.write("@SP\n");
-        outPutWriter.write("A=M\n");
-        outPutWriter.write("M=D\n");
-        outPutWriter.write("@SP\n");
-        outPutWriter.write("M=M+1\n");
+        outPutWriter.write("@THAT");
+        outPutWriter.newLine();
+        outPutWriter.write("D=M");
+        outPutWriter.newLine();
+        outPutWriter.write("@SP");
+        outPutWriter.newLine();
+        outPutWriter.write("A=M");
+        outPutWriter.newLine();
+        outPutWriter.write("M=D");
+        outPutWriter.newLine();
+        outPutWriter.write("@SP");
+        outPutWriter.newLine();
+        outPutWriter.write("M=M+1");
+        outPutWriter.newLine();
 
         // ARG = SP - 5 - nArgs
-        outPutWriter.write("@SP\n");
-        outPutWriter.write("D=M\n");
-        outPutWriter.write("@5\n");
-        outPutWriter.write("D=D-A\n");
-        outPutWriter.write("@" + nArgs + "\n");
-        outPutWriter.write("D=D-A\n");
-        outPutWriter.write("@ARG\n");
-        outPutWriter.write("M=D\n");
+        outPutWriter.write("@SP");
+        outPutWriter.newLine();
+        outPutWriter.write("D=M");
+        outPutWriter.newLine();
+        outPutWriter.write("@5");
+        outPutWriter.newLine();
+        outPutWriter.write("D=D-A");
+        outPutWriter.newLine();
+        outPutWriter.write("@" + nArgs);
+        outPutWriter.newLine();
+        outPutWriter.write("D=D-A");
+        outPutWriter.newLine();
+        outPutWriter.write("@ARG");
+        outPutWriter.newLine();
+        outPutWriter.write("M=D");
+        outPutWriter.newLine();
 
         // LCL = SP
-        outPutWriter.write("@SP\n");
-        outPutWriter.write("D=M\n");
-        outPutWriter.write("@LCL\n");
-        outPutWriter.write("M=D\n");
+        outPutWriter.write("@SP");
+        outPutWriter.newLine();
+        outPutWriter.write("D=M");
+        outPutWriter.newLine();
+        outPutWriter.write("@LCL");
+        outPutWriter.newLine();
+        outPutWriter.write("M=D");
+        outPutWriter.newLine();
 
         // goto function
-        outPutWriter.write("@" + functionName + "\n");
-        outPutWriter.write("0;JMP\n");
+        outPutWriter.write("@" + functionName);
+        outPutWriter.newLine();
+        outPutWriter.write("0;JMP");
+        outPutWriter.newLine();
 
         // (return-address)
-        outPutWriter.write("(" + returnLabel + ")\n");
-    }
-
-
-    private String getFileName(String vmFile) {
-        File file = new File(vmFile);
-        String fileName = file.getName();
-        // Remove .asm extension if it exists
-        if (fileName.endsWith(".asm")) {
-            fileName = fileName.substring(0, fileName.lastIndexOf('.'));
-        }
-        // Remove .vm extension if it exists
-        if (fileName.endsWith(".vm")) {
-            fileName = fileName.substring(0, fileName.lastIndexOf('.'));
-        }
-        return fileName;
+        outPutWriter.write("(" + returnLabel + ")");
+        outPutWriter.newLine();
     }
     
     
 
-
+    // Write funcrion command
     public void writeFunction(String functionName, int nVars) throws IOException {
-        currentFunction = functionName;
         outPutWriter.write("// function " + functionName + " " + nVars);
         outPutWriter.newLine();
         outPutWriter.write("(" + functionName + ")");
@@ -210,93 +262,123 @@ public class CodeWriter {
         }
     }
 
-    private void pushSegmentPointer(String segment) throws IOException {
-        outPutWriter.write("@" + segment);
+
+    public void writeReturn() throws IOException {
+        // FRAME = LCL
+        outPutWriter.write("@LCL");
         outPutWriter.newLine();
         outPutWriter.write("D=M");
         outPutWriter.newLine();
+        outPutWriter.write("@R13");  // R13 = FRAME
+        outPutWriter.newLine();
+        outPutWriter.write("M=D");
+        outPutWriter.newLine();
+    
+        // RET = *(FRAME-5)
+        outPutWriter.write("@5");
+        outPutWriter.newLine();
+        outPutWriter.write("A=D-A"); // A = FRAME-5
+        outPutWriter.newLine();
+        outPutWriter.write("D=M");   // D = *(FRAME-5)
+        outPutWriter.newLine();
+        outPutWriter.write("@R14");  // R14 = RET
+        outPutWriter.newLine();
+        outPutWriter.write("M=D");
+        outPutWriter.newLine();
+    
+        // *ARG = pop()
         outPutWriter.write("@SP");
+        outPutWriter.newLine();
+        outPutWriter.write("AM=M-1");
+        outPutWriter.newLine();
+        outPutWriter.write("D=M");
+        outPutWriter.newLine();
+        outPutWriter.write("@ARG");
         outPutWriter.newLine();
         outPutWriter.write("A=M");
         outPutWriter.newLine();
         outPutWriter.write("M=D");
         outPutWriter.newLine();
+    
+        // SP = ARG + 1
+        outPutWriter.write("@ARG");
+        outPutWriter.newLine();
+        outPutWriter.write("D=M+1");
+        outPutWriter.newLine();
         outPutWriter.write("@SP");
         outPutWriter.newLine();
-        outPutWriter.write("M=M+1");
+        outPutWriter.write("M=D");
+        outPutWriter.newLine();
+    
+        // THAT = *(FRAME-1)
+        outPutWriter.write("@R13");
+        outPutWriter.newLine();
+        outPutWriter.write("A=M-1");
+        outPutWriter.newLine();
+        outPutWriter.write("D=M");
+        outPutWriter.newLine();
+        outPutWriter.write("@THAT");
+        outPutWriter.newLine();
+        outPutWriter.write("M=D");
+        outPutWriter.newLine();
+    
+        // THIS = *(FRAME-2)
+        outPutWriter.write("@R13");
+        outPutWriter.newLine();
+        outPutWriter.write("D=M");
+        outPutWriter.newLine();
+        outPutWriter.write("@2");
+        outPutWriter.newLine();
+        outPutWriter.write("A=D-A");
+        outPutWriter.newLine();
+        outPutWriter.write("D=M");
+        outPutWriter.newLine();
+        outPutWriter.write("@THIS");
+        outPutWriter.newLine();
+        outPutWriter.write("M=D");
+        outPutWriter.newLine();
+    
+        // ARG = *(FRAME-3)
+        outPutWriter.write("@R13");
+        outPutWriter.newLine();
+        outPutWriter.write("D=M");
+        outPutWriter.newLine();
+        outPutWriter.write("@3");
+        outPutWriter.newLine();
+        outPutWriter.write("A=D-A");
+        outPutWriter.newLine();
+        outPutWriter.write("D=M");
+        outPutWriter.newLine();
+        outPutWriter.write("@ARG");
+        outPutWriter.newLine();
+        outPutWriter.write("M=D");
+        outPutWriter.newLine();
+    
+        // LCL = *(FRAME-4)
+        outPutWriter.write("@R13");
+        outPutWriter.newLine();
+        outPutWriter.write("D=M");
+        outPutWriter.newLine();
+        outPutWriter.write("@4");
+        outPutWriter.newLine();
+        outPutWriter.write("A=D-A");
+        outPutWriter.newLine();
+        outPutWriter.write("D=M");
+        outPutWriter.newLine();
+        outPutWriter.write("@LCL");
+        outPutWriter.newLine();
+        outPutWriter.write("M=D");
+        outPutWriter.newLine();
+    
+        // goto RET
+        outPutWriter.write("@R14");
+        outPutWriter.newLine();
+        outPutWriter.write("A=M");
+        outPutWriter.newLine();
+        outPutWriter.write("0;JMP");
         outPutWriter.newLine();
     }
-
-
-
     
-public void writeReturn() throws IOException {
-    // FRAME = LCL
-    outPutWriter.write("@LCL\n");
-    outPutWriter.write("D=M\n");
-    outPutWriter.write("@R13\n");  // R13 = FRAME
-    outPutWriter.write("M=D\n");
-    
-    // RET = *(FRAME-5)
-    outPutWriter.write("@5\n");
-    outPutWriter.write("A=D-A\n"); // A = FRAME-5
-    outPutWriter.write("D=M\n");   // D = *(FRAME-5)
-    outPutWriter.write("@R14\n");  // R14 = RET
-    outPutWriter.write("M=D\n");
-    
-    // *ARG = pop()
-    outPutWriter.write("@SP\n");
-    outPutWriter.write("AM=M-1\n");
-    outPutWriter.write("D=M\n");
-    outPutWriter.write("@ARG\n");
-    outPutWriter.write("A=M\n");
-    outPutWriter.write("M=D\n");
-    
-    // SP = ARG + 1
-    outPutWriter.write("@ARG\n");
-    outPutWriter.write("D=M+1\n");
-    outPutWriter.write("@SP\n");
-    outPutWriter.write("M=D\n");
-    
-    // THAT = *(FRAME-1)
-    outPutWriter.write("@R13\n");
-    outPutWriter.write("A=M-1\n");
-    outPutWriter.write("D=M\n");
-    outPutWriter.write("@THAT\n");
-    outPutWriter.write("M=D\n");
-    
-    // THIS = *(FRAME-2)
-    outPutWriter.write("@R13\n");
-    outPutWriter.write("D=M\n");
-    outPutWriter.write("@2\n");
-    outPutWriter.write("A=D-A\n");
-    outPutWriter.write("D=M\n");
-    outPutWriter.write("@THIS\n");
-    outPutWriter.write("M=D\n");
-    
-    // ARG = *(FRAME-3)
-    outPutWriter.write("@R13\n");
-    outPutWriter.write("D=M\n");
-    outPutWriter.write("@3\n");
-    outPutWriter.write("A=D-A\n");
-    outPutWriter.write("D=M\n");
-    outPutWriter.write("@ARG\n");
-    outPutWriter.write("M=D\n");
-    
-    // LCL = *(FRAME-4)
-    outPutWriter.write("@R13\n");
-    outPutWriter.write("D=M\n");
-    outPutWriter.write("@4\n");
-    outPutWriter.write("A=D-A\n");
-    outPutWriter.write("D=M\n");
-    outPutWriter.write("@LCL\n");
-    outPutWriter.write("M=D\n");
-    
-    // goto RET
-    outPutWriter.write("@R14\n");
-    outPutWriter.write("A=M\n");
-    outPutWriter.write("0;JMP\n");
-}
 
 
 
